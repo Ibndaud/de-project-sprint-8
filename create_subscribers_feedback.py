@@ -1,27 +1,10 @@
 import psycopg2
 
-# PostgreSQL connection parameters
-host = "localhost"
-port = "5432"
-database = "de"
-user = "jovyan"
-password = "jovyan"
+from subscribers_feedback_config import DB_CONFIG
 
-# Connect to the PostgreSQL database
-conn = psycopg2.connect(
-    host=host,
-    port=port,
-    database=database,
-    user=user,
-    password=password
-    )
 
-# Create a cursor object
-cursor = conn.cursor()
-
-# Create a table
-table_name = "subscribers_feedback"
-create_table_query = f"""
+table_name = 'subscribers_feedback'
+create_table_query = f'''
     DROP TABLE IF EXISTS {table_name};
     CREATE TABLE IF NOT EXISTS {table_name} (
         id serial4 NOT NULL,
@@ -38,9 +21,10 @@ create_table_query = f"""
         feedback varchar NULL,
         CONSTRAINT id_pk PRIMARY KEY (id)
     );
-"""
-cursor.execute(create_table_query)
+'''
 
-# Commit the changes and close the connection
-conn.commit()
-conn.close()
+
+with psycopg2.connect(**DB_CONFIG) as conn:
+    with conn.cursor() as cursor:
+        cursor.execute(create_table_query)
+        print(f'Table {table_name} created successfully.')

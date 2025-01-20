@@ -33,9 +33,9 @@ def spark_init(session_name) -> SparkSession:
             "org.postgresql:postgresql:42.4.0",
         ]
     )
-    spark = (SparkSession.builder.appName(session_name)\
-             .config("spark.sql.session.timeZone", "UTC")\
-                .config("spark.jars.packages", spark_jars_packages)\
+    spark = (SparkSession.builder.appName(session_name)
+             .config("spark.sql.session.timeZone", "UTC")
+                .config("spark.jars.packages", spark_jars_packages)
                     .getOrCreate()
                     )
     return spark
@@ -52,40 +52,40 @@ def restaurant_read_stream(spark: SparkSession) -> DataFrame:
                                            StructField('datetime_created', LongType(), True)]
                                            )
     current_timestamp_utc = int(datetime.now(timezone.utc).timestamp())
-    df = (spark.readStream.format('kafka')\
-          .option('kafka.bootstrap.servers', 'rc1b-2erh7b35n4j4v869.mdb.yandexcloud.net:9091')\
-            .options(**kafka_security_options)\
-                .option("subscribe", TOPIC_NAME_IN)\
-                    .load()\
-                        .withColumn('value', F.col('value').cast(StringType()))\
-                            .withColumn('parsed_key_value', F.from_json(F.col('value'), incomming_message_schema))\
-                                .selectExpr('parsed_key_value.*')\
+    df = (spark.readStream.format('kafka')
+          .option('kafka.bootstrap.servers', 'rc1b-2erh7b35n4j4v869.mdb.yandexcloud.net:9091')
+            .options(**kafka_security_options)
+                .option("subscribe", TOPIC_NAME_IN)
+                    .load()
+                        .withColumn('value', F.col('value').cast(StringType()))
+                            .withColumn('parsed_key_value', F.from_json(F.col('value'), incomming_message_schema))
+                                .selectExpr('parsed_key_value.*')
                                     .filter((F.col('parsed_key_value.adv_campaign_datetime_start') < 
                                              F.lit(current_timestamp_utc)) & (
-                                                 F.col('parsed_key_value.adv_campaign_datetime_end') > 
+                                                 F.col('parsed_key_value.adv_campaign_datetime_end') >= 
                                                  F.lit(current_timestamp_utc)))
                                                  )
     return df
 
 
 def subscribers_restaurant_read(spark: SparkSession) -> DataFrame:
-    df = (spark.read.format('jdbc')\
-          .option('url', 'jdbc:postgresql://rc1a-fswjkpli01zafgjm.mdb.yandexcloud.net:6432/de')\
-            .option('driver', 'org.postgresql.Driver')\
-                .option('dbtable', 'subscribers_restaurants')\
-                    .options(**postgresql_settings_in)\
+    df = (spark.read.format('jdbc')
+          .option('url', 'jdbc:postgresql://rc1a-fswjkpli01zafgjm.mdb.yandexcloud.net:6432/de')
+            .option('driver', 'org.postgresql.Driver')
+                .option('dbtable', 'subscribers_restaurants')
+                    .options(**postgresql_settings_in)
                         .load())
     return df
 
 
 def join_stream_subscribers(stream_df, subscribers_df) -> DataFrame:
     current_timestamp_utc = int(datetime.now(timezone.utc).timestamp())
-    df = (stream_df.join(subscribers_df, 'restaurant_id', 'inner')\
+    df = (stream_df.join(subscribers_df, 'restaurant_id', 'inner')
           .select(F.col('restaurant_id'), F.col('adv_campaign_id'), F.col('adv_campaign_content'), 
                   F.col('adv_campaign_owner'), F.col('adv_campaign_owner_contact'), 
                   F.col('adv_campaign_datetime_start'), F.col('adv_campaign_datetime_end'), 
-                  F.col('datetime_created'), F.col('client_id'))\
-                    .withcolumn('trigger_datetime_created', F.lit(current_timestamp_utc)))
+                  F.col('datetime_created'), F.col('client_id'))
+                    .withColumn('trigger_datetime_created', F.lit(current_timestamp_utc)))
     return df
 
 
