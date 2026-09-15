@@ -59,6 +59,16 @@ flowchart LR
 - Фильтрация только активных рекламных кампаний
 
 ---
+## Структура проекта
+
+```text
+.
+├── restaurant_subscribe_streaming_service.py  # стриминг-сервис (PySpark)
+├── create_subscribers_feedback.py             # создание таблицы фидбэка
+├── README.md
+└── LICENSE.txt
+```
+---
 
 ## Результат
 
