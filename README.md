@@ -1,4 +1,10 @@
 # Restaurant Subscribe Streaming Service
+![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
+![PySpark](https://img.shields.io/badge/PySpark-3.3-E25A1C?logo=apachespark&logoColor=white)
+![Apache Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?logo=apachekafka&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
+![Yandex Cloud](https://img.shields.io/badge/Yandex_Cloud-5282FF)
+![License](https://img.shields.io/badge/license-MIT-green)
 
 ## Описание проекта
 
