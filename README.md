@@ -69,6 +69,21 @@ flowchart LR
 └── LICENSE.txt
 ```
 ---
+## Как запустить
+
+> Инфраструктура курса: управляемые Kafka и PostgreSQL в Yandex Cloud.
+
+```bash
+# 1. Создать таблицу для фидбэка
+python create_subscribers_feedback.py
+
+# 2. Запустить стриминг-сервис
+spark-submit restaurant_subscribe_streaming_service.py
+
+# либо просто (PySpark сам скачает пакеты, они указаны в spark.jars.packages):
+python restaurant_subscribe_streaming_service.py
+```
+---
 
 ## Результат
 
