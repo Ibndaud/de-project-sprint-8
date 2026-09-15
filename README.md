@@ -27,6 +27,14 @@
    - сообщение для сервиса push-уведомлений (Kafka);
    - запись в таблицу для последующего анализа фидбэка (PostgreSQL).
 
+```mermaid
+flowchart LR
+    R["Рестораны<br/>рекламные акции"] -->|"Kafka"| IN["topic: ibndaud_in"]
+    IN --> SP["PySpark Structured Streaming<br/>фильтр активных акций"]
+    SUB[("PostgreSQL<br/>subscribers_restaurants")] -->|"JOIN по restaurant_id"| SP
+    SP -->|"foreachBatch → Kafka"| OUT["topic: ibndaud_out<br/>push-уведомления"]
+    SP -->|"foreachBatch → JDBC"| FB[("PostgreSQL<br/>subscribers_feedback")]
+```
 Таким образом, уведомления получают только те пользователи, у которых ресторан находится в избранном.
 
 ---
