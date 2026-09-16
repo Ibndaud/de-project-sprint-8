@@ -73,6 +73,16 @@ flowchart LR
 
 > Инфраструктура курса: управляемые Kafka и PostgreSQL в Yandex Cloud.
 
+Перед запуском задайте параметры подключения:
+```bash
+export KAFKA_HOST=<хост:порт>
+export KAFKA_USER=<логин>
+export KAFKA_PASSWORD=<пароль>
+
+# для create_subscribers_feedback.py:
+cp subscribers_feedback_config.example.py subscribers_feedback_config.py
+# ...и заполните DB_CONFIG своими значениями
+```
 ```bash
 # 1. Создать таблицу для фидбэка
 python create_subscribers_feedback.py
