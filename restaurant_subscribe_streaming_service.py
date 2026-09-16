@@ -9,25 +9,33 @@ from pyspark.sql.types import StructType, StructField, StringType, LongType
 TOPIC_NAME_IN = 'ibndaud_in'
 TOPIC_NAME_OUT = 'ibndaud_out'
 
-KAFKA_HOST = os.environ.get("KAFKA_HOST", "rc1b-...mdb.yandexcloud.net:9091")
+KAFKA_HOST = os.environ.get("KAFKA_HOST", "rc1b-2erh7b35n4j4v869.mdb.yandexcloud.net:9091")
 KAFKA_USER = os.environ.get("KAFKA_USER", "de-student")
 KAFKA_PASSWORD = os.environ.get("KAFKA_PASSWORD", "")
+
+PG_IN_HOST = os.environ.get("PG_IN_HOST", "rc1a-fswjkpli01zafgjm.mdb.yandexcloud.net:6432/de")
+PG_IN_USER = os.environ.get("PG_IN_USER", "student")
+PG_IN_PASSWORD = os.environ.get("PG_IN_PASSWORD", "")
+
+PG_OUT_HOST = os.environ.get("PG_OUT_HOST", "localhost:5432/")
+PG_OUT_USER = os.environ.get("PG_OUT_USER", "jovyan")
+PG_OUT_PASSWORD = os.environ.get("PG_OUT_PASSWORD", "")
 
 
 kafka_security_options = {
     'kafka.security.protocol': 'SASL_SSL',
     'kafka.sasl.mechanism': 'SCRAM-SHA-512',
-    'kafka.sasl.jaas.config': 'org.apache.kafka.common.security.scram.ScramLoginModule required username="{KAFKA_USER}" password="{KAFKA_PASSWORD}";',
+    'kafka.sasl.jaas.config': f'org.apache.kafka.common.security.scram.ScramLoginModule required username="{KAFKA_USER}" password="{KAFKA_PASSWORD}";',
 }
 
 postgresql_settings_in = {
-    'user': 'student',
-    'password': 'de-student'
+    'user': PG_IN_USER,
+    'password': PG_IN_PASSWORD
 }
 
 postgresql_settings_out = {
-    'user': 'jovyan',
-    'password': 'jovyan'
+    'user': PG_OUT_USER,
+    'password': PG_OUT_PASSWORD
 }
 
 
@@ -58,7 +66,7 @@ def restaurant_read_stream(spark: SparkSession) -> DataFrame:
                                            )
     current_timestamp_utc = int(datetime.now(timezone.utc).timestamp())
     df = (spark.readStream.format('kafka')
-          .option('kafka.bootstrap.servers', 'rc1b-2erh7b35n4j4v869.mdb.yandexcloud.net:9091')
+          .option('kafka.bootstrap.servers', KAFKA_HOST)
             .options(**kafka_security_options)
                 .option("subscribe", TOPIC_NAME_IN)
                     .load()
@@ -75,7 +83,7 @@ def restaurant_read_stream(spark: SparkSession) -> DataFrame:
 
 def subscribers_restaurant_read(spark: SparkSession) -> DataFrame:
     df = (spark.read.format('jdbc')
-          .option('url', 'jdbc:postgresql://rc1a-fswjkpli01zafgjm.mdb.yandexcloud.net:6432/de')
+          .option('url', f'jdbc:postgresql://{PG_IN_HOST}')
             .option('driver', 'org.postgresql.Driver')
                 .option('dbtable', 'subscribers_restaurants')
                     .options(**postgresql_settings_in)
@@ -101,7 +109,7 @@ def foreach_batch_function(df, epoch_id):
     # записываем df в PostgreSQL с полем feedback
     df.write.mode('append')\
         .format('jdbc')\
-            .option('url', 'jdbc:postgresql://localhost:5432/')\
+            .option('url', f'jdbc:postgresql://{PG_OUT_HOST}')\
                 .option('driver', 'org.postgresql.Driver')\
                     .option('dbtable', 'subscribers_feedback')\
                         .options(**postgresql_settings_out)\
@@ -114,7 +122,7 @@ def foreach_batch_function(df, epoch_id):
                                                 .alias('value'))
     # отправляем сообщения в результирующий топик Kafka без поля feedback
     kafka_df.write.format('kafka')\
-        .option('kafka.bootstrap.servers', 'rc1b-2erh7b35n4j4v869.mdb.yandexcloud.net:9091')\
+        .option('kafka.bootstrap.servers', KAFKA_HOST)\
             .options(**kafka_security_options)\
                 .option('topic', TOPIC_NAME_OUT)\
                     .save()
