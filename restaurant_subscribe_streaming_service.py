@@ -9,10 +9,15 @@ from pyspark.sql.types import StructType, StructField, StringType, LongType
 TOPIC_NAME_IN = 'ibndaud_in'
 TOPIC_NAME_OUT = 'ibndaud_out'
 
+KAFKA_HOST = os.environ.get("KAFKA_HOST", "rc1b-...mdb.yandexcloud.net:9091")
+KAFKA_USER = os.environ.get("KAFKA_USER", "de-student")
+KAFKA_PASSWORD = os.environ.get("KAFKA_PASSWORD", "")
+
+
 kafka_security_options = {
     'kafka.security.protocol': 'SASL_SSL',
     'kafka.sasl.mechanism': 'SCRAM-SHA-512',
-    'kafka.sasl.jaas.config': 'org.apache.kafka.common.security.scram.ScramLoginModule required username=\"de-student\" password=\"ltcneltyn\";',
+    'kafka.sasl.jaas.config': 'org.apache.kafka.common.security.scram.ScramLoginModule required username="{KAFKA_USER}" password="{KAFKA_PASSWORD}";',
 }
 
 postgresql_settings_in = {
